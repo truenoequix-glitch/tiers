@@ -3,48 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCTiers Elite | Final Edition</title>
+    <title>MCTiers Elite | Final Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         body { background-color: #0d111a; font-family: 'Segoe UI', sans-serif; color: #fdfdfd; }
         
-        /* Contenedor de la fila con más separación (margin-bottom) */
+        /* Contenedor de la fila con separación amplia */
         .player-row { 
             background-color: #161d2b; 
             border: 1px solid #1f283d; 
             border-radius: 12px; 
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            margin-bottom: 24px; /* Más separación entre jugadores */
+            margin-bottom: 28px; 
             position: relative;
+            height: 90px;
         }
 
         .player-row:hover {
             transform: scale(1.01);
             border-color: #3b4b6b;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
         }
 
-        /* --- EFECTO BARRIDO DE LUZ EN EL NÚMERO --- */
+        /* --- EFECTO BARRIDO DE LUZ (SHINE) --- */
         .rank-box { 
-            width: 60px; height: 100%; position: absolute; left: 0; 
+            width: 65px; height: 100%; position: absolute; left: 0; 
             display: flex; align-items: center; justify-content: center; 
-            font-weight: 900; font-style: italic; font-size: 1.6rem; 
+            font-weight: 900; font-style: italic; font-size: 1.7rem; 
             border-radius: 12px 0 0 12px; overflow: hidden;
         }
 
-        /* La línea blanca que pasa por encima */
         .rank-box::after {
             content: '';
             position: absolute;
             top: 0; left: -150%;
-            width: 50%; height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.6), transparent);
+            width: 60%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.7), transparent);
             transform: skewX(-25deg);
-            transition: 0.5s;
+            transition: 0.6s;
         }
 
-        /* Disparar el brillo al pasar el mouse por la fila */
         .player-row:hover .rank-box::after {
             left: 150%;
         }
@@ -54,39 +53,41 @@
         .rank-3 { background: linear-gradient(135deg, #b45309, #78350f); color: #fef3c7; }
         .rank-default { background: #1e293b; color: #64748b; }
 
-        /* --- TIER CON DEGRADADO --- */
+        /* --- TIERS CON DEGRADADO --- */
         .tier-gradient {
             font-weight: 900;
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-style: italic;
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
-            filter: drop-shadow(0 0 8px rgba(0,0,0,0.3));
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.4));
         }
 
+        /* --- AVATAR VISAGE SURGEPLAY --- */
         .mc-avatar {
-            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.9));
+            filter: drop-shadow(0 12px 12px rgba(0,0,0,0.8));
             image-rendering: pixelated;
-            transition: 0.3s;
+            transition: transform 0.3s ease;
+            z-index: 30;
         }
 
         .player-row:hover .mc-avatar {
-            transform: scale(1.1) rotate(-3deg);
+            transform: scale(1.15) rotate(-2deg);
         }
 
         .region-badge { 
             background: rgba(127, 29, 29, 0.4); 
             color: #f87171; 
             border: 1px solid #991b1b; 
-            padding: 4px 12px; 
+            padding: 5px 15px; 
             border-radius: 6px; 
-            font-weight: 800;
-            font-size: 0.9rem;
+            font-weight: 900;
+            font-size: 1rem;
         }
     </style>
 </head>
-<body class="p-6 md:p-16">
+<body class="p-8 md:p-20">
 
     <div class="max-w-6xl mx-auto">
         <div id="player-container">
@@ -94,11 +95,12 @@
     </div>
 
     <script>
+        // REEMPLAZA CON TU LINK CSV
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTlfD0FvQ-kVK2leat4n9qOvfu3zJ8rlv-B8qm9434NOMGCV4pOyw7B-cchbzFCpKCVSOGFhCI0YST_/pub?output=csv';
 
         function getTierStyle(tier) {
             const t = tier.toUpperCase();
-            if (t.includes('S+')) return 'linear-gradient(to bottom, #ff4d4d, #990000)';
+            if (t.includes('S+')) return 'linear-gradient(to bottom, #ff3333, #800000)';
             if (t.includes('S')) return 'linear-gradient(to bottom, #ef4444, #7f1d1d)';
             if (t.includes('A+')) return 'linear-gradient(to bottom, #fb923c, #9a3412)';
             if (t.includes('A-')) return 'linear-gradient(to bottom, #fde047, #a16207)';
@@ -128,20 +130,20 @@
 
                         const rankClass = getRankClass(p.Posicion);
                         const tierGradient = getTierStyle(p.Tier);
-                        // Cambiado a 'body' para ver el skin completo como en tu imagen
-                        const skinUrl = `https://visage.surgeplay.com/body/200/${p.UUID || 'steve'}`;
+                        // API Visage Surgeplay: Bust (Pecho) con tamaño 180
+                        const skinUrl = `https://visage.surgeplay.com/bust/180/${p.UUID || 'steve'}`;
 
                         const row = `
-                            <div class="player-row grid grid-cols-12 gap-4 items-center p-4 h-24">
+                            <div class="player-row grid grid-cols-12 gap-4 items-center p-4">
                                 <div class="col-span-1">
                                     <div class="rank-box ${rankClass}">${p.Posicion}</div>
                                 </div>
 
-                                <div class="col-span-6 flex items-center pl-14 relative">
-                                    <img src="${skinUrl}" class="mc-avatar h-32 absolute -top-10 left-12 z-20">
-                                    <div class="flex flex-col ml-32">
-                                        <span class="text-2xl font-black italic tracking-tighter uppercase">${p.Jugador}</span>
-                                        <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
+                                <div class="col-span-6 flex items-center pl-16 relative">
+                                    <img src="${skinUrl}" class="mc-avatar h-36 absolute -top-12 left-10">
+                                    <div class="flex flex-col ml-36">
+                                        <span class="text-2xl font-black italic tracking-tighter uppercase leading-none">${p.Jugador}</span>
+                                        <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 mt-2">
                                             <span class="text-amber-500 text-sm">✦</span> COMBAT MASTER 
                                             <span class="text-slate-400">(${p.Puntos || 0} POINTS)</span>
                                         </div>
@@ -149,10 +151,10 @@
                                 </div>
 
                                 <div class="col-span-2 flex justify-center">
-                                    <span class="region-badge uppercase">${p.Region}</span>
+                                    <span class="region-badge uppercase tracking-widest">${p.Region}</span>
                                 </div>
 
-                                <div class="col-span-3 text-right pr-10">
+                                <div class="col-span-3 text-right pr-12">
                                     <span class="tier-gradient" style="background-image: ${tierGradient}">${p.Tier}</span>
                                 </div>
                             </div>
