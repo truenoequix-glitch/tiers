@@ -2,166 +2,113 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCTiers Elite | Compact Version</title>
+    <title>VayluxMC | Tiers System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { background-color: #0d111a; font-family: 'Segoe UI', sans-serif; color: #fdfdfd; }
+        body { background-color: #0d111a; color: #fdfdfd; font-family: 'Segoe UI', sans-serif; }
         
-        .player-row { 
-            background-color: #161d2b; 
-            border: 1px solid #1f283d; 
-            border-radius: 12px; 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            margin-bottom: 20px; 
-            position: relative;
-            height: 85px; /* Altura ajustada */
+        /* Contenedor de la tarjeta */
+        .player-card { 
+            background-color: #161d2b; border: 1px solid #1f283d; 
+            border-radius: 12px; margin-bottom: 25px; height: 95px;
+            display: grid; grid-template-columns: repeat(12, 1fr);
+            align-items: center; position: relative; transition: 0.3s;
         }
 
-        .player-row:hover {
-            transform: translateY(-3px);
-            border-color: #3b4b6b;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        }
+        .player-card:hover { transform: translateY(-3px); border-color: #3b4b6b; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
 
-        /* --- EFECTO BARRIDO DE LUZ --- */
-        .rank-box { 
-            width: 60px; height: 100%; position: absolute; left: 0; 
+        /* Pestaña de posición corregida (No amontonada) */
+        .rank-badge { 
+            width: 55px; height: 65px; position: absolute; left: 0; 
             display: flex; align-items: center; justify-content: center; 
-            font-weight: 900; font-style: italic; font-size: 1.5rem; 
-            border-radius: 12px 0 0 12px; overflow: hidden;
+            font-weight: 900; font-style: italic; font-size: 1.6rem; 
+            border-radius: 0 12px 12px 0; box-shadow: 4px 0 15px rgba(0,0,0,0.4);
+            z-index: 10;
         }
 
-        .rank-box::after {
-            content: '';
-            position: absolute;
-            top: 0; left: -150%;
-            width: 60%; height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.6), transparent);
-            transform: skewX(-25deg);
-            transition: 0.6s;
-        }
-
-        .player-row:hover .rank-box::after {
-            left: 150%;
-        }
-
+        /* Colores de podio degradados */
         .rank-1 { background: linear-gradient(135deg, #fbbf24, #d97706); color: #451a03; }
         .rank-2 { background: linear-gradient(135deg, #94a3b8, #475569); color: #0f172a; }
         .rank-3 { background: linear-gradient(135deg, #b45309, #78350f); color: #fef3c7; }
         .rank-default { background: #1e293b; color: #64748b; }
 
-        /* --- TIERS CON DEGRADADO --- */
-        .tier-gradient {
-            font-weight: 900;
-            font-size: 1.8rem;
-            font-style: italic;
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
+        /* Efecto de brillo blanco al pasar el mouse por el número */
+        .player-card:hover .rank-badge::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-20deg); animation: shine 0.6s forwards;
+        }
+        @keyframes shine { 100% { left: 200%; } }
+
+        .tier-text { 
+            font-weight: 900; font-size: 2.2rem; font-style: italic;
+            background-clip: text; -webkit-background-clip: text; color: transparent;
         }
 
-        /* --- AVATAR AJUSTADO --- */
-        .mc-avatar {
-            filter: drop-shadow(0 8px 10px rgba(0,0,0,0.7));
-            image-rendering: pixelated;
-            transition: transform 0.3s ease;
-            z-index: 20;
-        }
-
-        .player-row:hover .mc-avatar {
-            transform: scale(1.1);
-        }
-
-        .region-badge { 
-            background: rgba(127, 29, 29, 0.4); 
-            color: #f87171; 
-            border: 1px solid #991b1b; 
-            padding: 3px 12px; 
-            border-radius: 5px; 
-            font-weight: 800;
-            font-size: 0.85rem;
-        }
+        .region-tag { background: #7f1d1d; color: #f87171; border: 1px solid #991b1b; padding: 4px 12px; border-radius: 6px; font-weight: 800; }
     </style>
 </head>
-<body class="p-8 md:p-16">
-
-    <div class="max-w-5xl mx-auto">
-        <div id="player-container"></div>
-    </div>
+<body class="p-10">
+    <div class="max-w-6xl mx-auto" id="leaderboard">
+        </div>
 
     <script>
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTlfD0FvQ-kVK2leat4n9qOvfu3zJ8rlv-B8qm9434NOMGCV4pOyw7B-cchbzFCpKCVSOGFhCI0YST_/pub?output=csv';
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTlfD0FvQ-kVK2leat4n9qOvfu3zJ8rlv-B8qm9434NOMGCV4pOyw7B-cchbzFCpKCVSOGFhCI0YST_/pub?output=csv';
 
-        function getTierStyle(tier) {
+        function getTierGradient(tier) {
             const t = tier.toUpperCase();
-            if (t.includes('S+')) return 'linear-gradient(to bottom, #ff3333, #800000)';
-            if (t.includes('S')) return 'linear-gradient(to bottom, #ef4444, #7f1d1d)';
-            if (t.includes('A+')) return 'linear-gradient(to bottom, #fb923c, #9a3412)';
-            if (t.includes('A-')) return 'linear-gradient(to bottom, #fde047, #a16207)';
-            if (t.includes('B+')) return 'linear-gradient(to bottom, #4ade80, #14532d)';
-            if (t.includes('B')) return 'linear-gradient(to bottom, #60a5fa, #1e3a8a)';
-            return 'linear-gradient(to bottom, #94a3b8, #334155)';
+            if (t.includes('S+')) return 'linear-gradient(#ff4d4d, #990000)';
+            if (t.includes('S')) return 'linear-gradient(#ef4444, #7f1d1d)';
+            if (t.includes('A')) return 'linear-gradient(#fb923c, #9a3412)';
+            if (t.includes('B')) return 'linear-gradient(#4ade80, #14532d)';
+            return 'linear-gradient(#60a5fa, #1e3a8a)';
         }
 
-        function getRankClass(pos) {
-            if (pos == 1) return 'rank-1';
-            if (pos == 2) return 'rank-2';
-            if (pos == 3) return 'rank-3';
-            return 'rank-default';
-        }
-
-        function loadPlayers() {
-            Papa.parse(SHEET_URL, {
-                download: true,
-                header: true,
+        function loadData() {
+            Papa.parse(CSV_URL, {
+                download: true, header: true,
                 complete: function(results) {
-                    const players = results.data;
-                    const container = document.getElementById('player-container');
+                    // Filtrar filas vacías y ORDENAR POR PUNTOS
+                    let players = results.data.filter(p => p.Jugador);
+                    players.sort((a, b) => parseInt(b.Puntos || 0) - parseInt(a.Puntos || 0));
+
+                    const container = document.getElementById('leaderboard');
                     container.innerHTML = '';
 
-                    players.forEach(p => {
-                        if(!p.Jugador) return;
+                    players.forEach((p, index) => {
+                        const rank = index + 1;
+                        const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-default';
+                        const tierColor = getTierGradient(p.Tier);
 
-                        const rankClass = getRankClass(p.Posicion);
-                        const tierGradient = getTierStyle(p.Tier);
-                        // Tamaño reducido a 120 para que entre mejor en la tarjeta
-                        const skinUrl = `https://visage.surgeplay.com/bust/120/${p.UUID || 'steve'}`;
-
-                        const row = `
-                            <div class="player-row grid grid-cols-12 gap-4 items-center p-4">
-                                <div class="col-span-1">
-                                    <div class="rank-box ${rankClass}">${p.Posicion}</div>
-                                </div>
-
-                                <div class="col-span-6 flex items-center pl-16 relative">
-                                    <img src="${skinUrl}" class="mc-avatar h-24 absolute -top-4 left-10">
-                                    <div class="flex flex-col ml-28">
-                                        <span class="text-xl font-black italic tracking-tighter uppercase leading-none">${p.Jugador}</span>
-                                        <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 mt-2">
-                                            <span class="text-amber-500 text-xs">✦</span> COMBAT MASTER 
-                                            <span class="text-slate-400">(${p.Puntos || 0} POINTS)</span>
-                                        </div>
+                        container.innerHTML += `
+                            <div class="player-card">
+                                <div class="rank-badge ${rankClass}">${rank}</div>
+                                
+                                <div class="col-span-7 flex items-center pl-20">
+                                    <img src="https://visage.surgeplay.com/bust/120/${p.UUID}" class="h-24 -mt-8 drop-shadow-2xl">
+                                    <div class="ml-12">
+                                        <h2 class="text-2xl font-black italic uppercase leading-none">${p.Jugador}</h2>
+                                        <p class="text-[11px] font-bold text-slate-500 mt-2 uppercase tracking-tighter">
+                                            <span class="text-amber-500">✦</span> Combat Master (${p.Puntos} points)
+                                        </p>
                                     </div>
                                 </div>
 
                                 <div class="col-span-2 flex justify-center">
-                                    <span class="region-badge uppercase tracking-widest">${p.Region}</span>
+                                    <span class="region-tag uppercase text-xs">${p.Region}</span>
                                 </div>
 
-                                <div class="col-span-3 text-right pr-10">
-                                    <span class="tier-gradient" style="background-image: ${tierGradient}">${p.Tier}</span>
+                                <div class="col-span-3 text-right pr-12">
+                                    <span class="tier-text" style="background-image: ${tierColor}">${p.Tier}</span>
                                 </div>
                             </div>
                         `;
-                        container.innerHTML += row;
                     });
                 }
             });
         }
-
-        window.onload = loadPlayers;
+        window.onload = loadData;
     </script>
 </body>
 </html>
