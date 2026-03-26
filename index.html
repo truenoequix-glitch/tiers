@@ -9,9 +9,15 @@
     <style>
         body { background-color: #0d111a; font-family: 'Segoe UI', sans-serif; color: #fdfdfd; }
         .panel-bg { background: #111723; border: 1px solid #1f283d; }
-        .tier-text { font-weight: 900; font-size: 1.5rem; letter-spacing: -1px; }
-        .region-badge { background-color: #7f1d1d; color: #f87171; border: 1px solid #991b1b; padding: 4px 12px; font-weight: bold; border-radius: 4px; font-size: 1rem; }
-        .rank-yellow { background-color: #fbbf24; color: #451a03; }
+        .tier-text { font-weight: 900; font-size: 1.6rem; letter-spacing: -1px; font-style: italic; }
+        .region-badge { background-color: #7f1d1d; color: #f87171; border: 1px solid #991b1b; padding: 4px 14px; font-weight: bold; border-radius: 4px; font-size: 1.1rem; }
+        
+        /* Colores de Posiciones */
+        .rank-1 { background-color: #fbbf24; color: #451a03; } /* Oro */
+        .rank-2 { background-color: #94a3b8; color: #0f172a; } /* Plata */
+        .rank-3 { background-color: #b45309; color: #fef3c7; } /* Bronce */
+        .rank-other { background-color: #334155; color: #cbd5e1; } /* Gris */
+
         .player-row { background-color: #161d2b; border: 1px solid #1f283d; border-radius: 12px; transition: 0.2s; }
         .player-row:hover { border-color: #3b4b6b; }
     </style>
@@ -47,17 +53,26 @@
     <script>
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTlfD0FvQ-kVK2leat4n9qOvfu3zJ8rlv-B8qm9434NOMGCV4pOyw7B-cchbzFCpKCVSOGFhCI0YST_/pub?output=csv';
 
-        // Lógica de puntos basada en el Tier
-        function getPointsByTier(tier) {
-            const scores = {
-                'S+': 100,
-                'S': 80,
-                'A+': 60,
-                'A': 40,
-                'B+': 20,
-                'B': 1
+        // Lógica de puntos y colores por Tier
+        function getTierData(tier) {
+            const cleanTier = tier.trim().toUpperCase();
+            const data = {
+                'S+': { points: 100, color: '#ff0000' }, // Rojo intenso
+                'S':  { points: 80,  color: '#dc2626' }, // Rojo
+                'A+': { points: 60,  color: '#f97316' }, // Naranja
+                'A-': { points: 40,  color: '#eab308' }, // Amarillo
+                'B+': { points: 20,  color: '#22c55e' }, // Verde
+                'B':  { points: 1,   color: '#3b82f6' }  // Azul
             };
-            return scores[tier] || 0;
+            return data[cleanTier] || { points: 0, color: '#94a3b8' };
+        }
+
+        // Lógica de color por posición
+        function getRankClass(pos) {
+            if (pos == 1) return 'rank-1';
+            if (pos == 2) return 'rank-2';
+            if (pos == 3) return 'rank-3';
+            return 'rank-other';
         }
 
         function loadPlayers() {
@@ -72,12 +87,13 @@
                     players.forEach(p => {
                         if(!p.Jugador) return;
 
-                        const points = getPointsByTier(p.Tier.trim());
+                        const tierData = getTierData(p.Tier);
+                        const rankClass = getRankClass(p.Posicion);
 
                         const row = `
                             <div class="player-row grid grid-cols-12 gap-4 items-center p-3 relative overflow-hidden">
                                 <div class="col-span-2 flex items-center relative h-16">
-                                    <div class="absolute inset-y-0 left-0 w-12 rank-yellow rounded-l-lg flex items-center justify-center">
+                                    <div class="absolute inset-y-0 left-0 w-12 ${rankClass} rounded-l-lg flex items-center justify-center">
                                         <span class="text-2xl font-black italic">${p.Posicion}</span>
                                     </div>
                                     <img src="https://mc-heads.net/avatar/${p.Jugador}/64" class="h-16 w-16 relative z-10 rounded shadow-2xl ml-14">
@@ -86,7 +102,7 @@
                                 <div class="col-span-5 flex flex-col pl-10">
                                     <span class="text-xl font-bold text-white tracking-wide">${p.Jugador}</span>
                                     <div class="flex items-center gap-1 text-[11px] text-slate-500 font-bold mt-1">
-                                        <span class="text-amber-500">◆</span> Combat Master <span class="opacity-50">(${points} points)</span>
+                                        <span class="text-amber-500">◆</span> Combat Master <span class="opacity-50">(${tierData.points} points)</span>
                                     </div>
                                 </div>
 
@@ -95,7 +111,7 @@
                                 </div>
 
                                 <div class="col-span-3 text-right pr-6">
-                                    <span class="tier-text text-slate-400 italic">${p.Tier}</span>
+                                    <span class="tier-text" style="color: ${tierData.color}">${p.Tier}</span>
                                 </div>
                             </div>
                         `;
