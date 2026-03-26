@@ -3,60 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCTiers Editable | Overall</title>
+    <title>MCTiers Replica | Overall</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         body { background-color: #0d111a; font-family: 'Segoe UI', sans-serif; color: #fdfdfd; }
-        .tab-button-single { background-color: #2b354a; border: 1px solid #4b5a78; color: #fff; box-shadow: 0 4px 10px rgba(75, 90, 120, 0.3); }
-        .underline-active { background-color: #fff; }
-        .tier-ht { color: #feae37; text-shadow: 0 0 5px rgba(254, 174, 55, 0.5); }
-        .tier-lt { color: #a1a8b9; }
-        .panel-bg { background-color: #121826; border: 1px solid #1f283d; }
-        .rank-badge { background-color: #fbbf24; color: #451a03; } /* Color amarillo de la imagen */
+        .panel-bg { background: #111723; border: 1px solid #1f283d; }
+        .tier-text { font-weight: 900; font-size: 1.5rem; letter-spacing: -1px; }
+        .region-badge { background-color: #7f1d1d; color: #f87171; border: 1px solid #991b1b; padding: 4px 12px; font-weight: bold; border-radius: 4px; font-size: 1rem; }
+        .rank-yellow { background-color: #fbbf24; color: #451a03; }
+        .player-row { background-color: #161d2b; border: 1px solid #1f283d; border-radius: 12px; transition: 0.2s; }
+        .player-row:hover { border-color: #3b4b6b; }
     </style>
 </head>
-<body class="p-6 md:p-12">
+<body class="p-4 md:p-10">
 
     <div class="max-w-6xl mx-auto">
-        
-        <div class="flex mb-10">
-            <div class="tab-button-single px-5 py-3 rounded-xl flex items-center gap-3">
-                <img src="https://share.google/oPhHdgXbXbx0fWEmc" alt="trophy" class="w-5 h-5">
-                <div class="flex flex-col">
-                    <span class="font-bold text-sm">Overall</span>
-                    <div class="underline-active w-full h-0.5 mt-1 rounded-full"></div>
+        <div class="panel-bg rounded-2xl p-6 shadow-2xl">
+            
+            <div class="flex justify-between items-center mb-8">
+                <div class="bg-[#1a2030] border border-[#323a4f] px-5 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                    <span class="opacity-40">i</span> Information
                 </div>
-            </div>
-        </div>
-
-        <div class="panel-bg rounded-2xl p-6 shadow-xl text-sm">
-            <div class="flex justify-between items-center mb-6">
-                <div class="bg-[#1a2030] border border-[#323a4f] px-4 py-2 rounded-lg text-xs text-white">
-                    <span class="opacity-50 mr-2">i</span> Information
-                </div>
-                <div class="hidden md:flex items-center gap-3 p-2 rounded-lg bg-[#1a2030] border border-[#323a4f] text-[11px]">
-                    <span class="text-slate-500 uppercase">Server IP</span>
-                    <span class="font-bold text-white">minemen.club, hypixel.net</span>
-                    <img src="https://mctiers.com/assets/images/icons/discord.png" alt="Discord" class="h-3 opacity-70">
+                <div class="flex items-center gap-4 p-2 px-4 rounded-lg bg-[#1a2030] border border-[#323a4f] text-xs">
+                    <span class="text-slate-500 uppercase font-bold">Server IP</span>
+                    <span class="font-bold text-white tracking-wider text-[13px]">minemen.club, hypixel.net</span>
+                    <img src="https://cdn-icons-png.flaticon.com/512/5968/5968756.png" class="h-4 w-4 opacity-70" alt="Discord">
                 </div>
             </div>
 
-            <div class="grid grid-cols-12 gap-4 text-slate-500 text-[10px] uppercase font-bold px-4 mb-4">
+            <div class="grid grid-cols-12 gap-4 text-slate-500 text-[11px] uppercase font-black px-6 mb-4 tracking-widest">
                 <div class="col-span-1">#</div>
                 <div class="col-span-6">Player</div>
-                <div class="col-span-2 text-right">Region</div>
+                <div class="col-span-2 text-center">Region</div>
                 <div class="col-span-3 text-right">Tier</div>
             </div>
 
-            <div id="player-container" class="space-y-3">
+            <div id="player-container" class="space-y-4">
                 </div>
         </div>
     </div>
 
     <script>
-        // REEMPLAZA ESTO CON TU LINK DE GOOGLE SHEETS (CSV)
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTlfD0FvQ-kVK2leat4n9qOvfu3zJ8rlv-B8qm9434NOMGCV4pOyw7B-cchbzFCpKCVSOGFhCI0YST_/pub?output=csv';
+
+        // Lógica de puntos basada en el Tier
+        function getPointsByTier(tier) {
+            const scores = {
+                'S+': 100,
+                'S': 80,
+                'A+': 60,
+                'A': 40,
+                'B+': 20,
+                'B': 1
+            };
+            return scores[tier] || 0;
+        }
 
         function loadPlayers() {
             Papa.parse(SHEET_URL, {
@@ -70,32 +72,30 @@
                     players.forEach(p => {
                         if(!p.Jugador) return;
 
-                        // Determinar si es HT o LT para el color
-                        const isHighTier = p.Tier.includes('HT');
-                        const tierClass = isHighTier ? 'tier-ht' : 'tier-lt';
+                        const points = getPointsByTier(p.Tier.trim());
 
                         const row = `
-                            <div class="grid grid-cols-12 gap-4 items-center bg-[#1a2030] rounded-xl p-3 border border-[#323a4f] hover:border-slate-600 transition">
-                                <div class="col-span-1 flex items-center relative h-16">
-                                    <div class="absolute inset-y-0 left-0 w-10 rank-badge rounded-l-lg flex items-center justify-center">
-                                        <span class="text-2xl font-black italic">${p.Posicion}.</span>
+                            <div class="player-row grid grid-cols-12 gap-4 items-center p-3 relative overflow-hidden">
+                                <div class="col-span-2 flex items-center relative h-16">
+                                    <div class="absolute inset-y-0 left-0 w-12 rank-yellow rounded-l-lg flex items-center justify-center">
+                                        <span class="text-2xl font-black italic">${p.Posicion}</span>
                                     </div>
-                                    <img src="https://mc-heads.net/avatar/${p.Jugador}/64" alt="Skin" class="h-16 w-16 relative z-10 rounded shadow-lg ml-6">
+                                    <img src="https://mc-heads.net/avatar/${p.Jugador}/64" class="h-16 w-16 relative z-10 rounded shadow-2xl ml-14">
                                 </div>
-                                <div class="col-span-6 flex flex-col pl-8">
-                                    <span class="text-lg font-bold text-white">${p.Jugador}</span>
-                                    <div class="flex items-center gap-1 text-[11px] text-slate-500">
-                                        <span class="text-amber-500">◆</span> Combat Master <span class="opacity-60">(${p.Puntos || '0'} points)</span>
+
+                                <div class="col-span-5 flex flex-col pl-10">
+                                    <span class="text-xl font-bold text-white tracking-wide">${p.Jugador}</span>
+                                    <div class="flex items-center gap-1 text-[11px] text-slate-500 font-bold mt-1">
+                                        <span class="text-amber-500">◆</span> Combat Master <span class="opacity-50">(${points} points)</span>
                                     </div>
                                 </div>
-                                <div class="col-span-2 text-right">
-                                    <span class="px-2 py-1 bg-red-950/30 text-red-400 text-[10px] font-bold rounded border border-red-900/50">${p.Region}</span>
+
+                                <div class="col-span-2 flex justify-center">
+                                    <span class="region-badge uppercase tracking-tighter">${p.Region}</span>
                                 </div>
-                                <div class="col-span-3 flex justify-end items-center gap-2">
-                                    <div class="flex flex-col items-center">
-                                        <img src="https://mctiers.com/assets/images/icons/diamond_sword.png" class="w-4 h-4 opacity-80 mb-1">
-                                        <span class="${tierClass} text-xs font-black">${p.Tier}</span>
-                                    </div>
+
+                                <div class="col-span-3 text-right pr-6">
+                                    <span class="tier-text text-slate-400 italic">${p.Tier}</span>
                                 </div>
                             </div>
                         `;
