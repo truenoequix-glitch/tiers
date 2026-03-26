@@ -3,23 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCTiers Replica | Overall</title>
+    <title>MCTiers Custom | Live Data</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         body { background-color: #0d111a; font-family: 'Segoe UI', sans-serif; color: #fdfdfd; }
-        .panel-bg { background: #111723; border: 1px solid #1f283d; }
-        .tier-text { font-weight: 900; font-size: 1.6rem; letter-spacing: -1px; font-style: italic; }
-        .region-badge { background-color: #7f1d1d; color: #f87171; border: 1px solid #991b1b; padding: 4px 14px; font-weight: bold; border-radius: 4px; font-size: 1.1rem; }
         
-        /* Colores de Posiciones */
-        .rank-1 { background-color: #fbbf24; color: #451a03; } /* Oro */
-        .rank-2 { background-color: #94a3b8; color: #0f172a; } /* Plata */
-        .rank-3 { background-color: #b45309; color: #fef3c7; } /* Bronce */
-        .rank-other { background-color: #334155; color: #cbd5e1; } /* Gris */
+        .panel-bg { background: #111723; border: 1px solid #1f283d; }
+        
+        /* Contenedor de la fila con transición suave */
+        .player-row { 
+            background-color: #161d2b; 
+            border: 1px solid #1f283d; 
+            border-radius: 10px; 
+            transition: all 0.3s ease;
+            position: relative;
+        }
 
-        .player-row { background-color: #161d2b; border: 1px solid #1f283d; border-radius: 12px; transition: 0.2s; }
-        .player-row:hover { border-color: #3b4b6b; }
+        /* --- EFECTO DE BRILLO (GLOW) AL PASAR EL MOUSE --- */
+        .player-row:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), 0 0 40px rgba(59, 130, 246, 0.1);
+            background: linear-gradient(90deg, #161d2b 0%, #1c263b 100%);
+        }
+
+        /* Estilo del Avatar estilo MCTiers (Cuerpo completo/Recortado) */
+        .mc-avatar {
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
+            transform: scale(1.1);
+            object-fit: contain;
+            image-rendering: pixelated; /* Mantiene el estilo Minecraft */
+        }
+
+        /* Tiers y Colores */
+        .tier-text { font-weight: 900; font-size: 1.8rem; font-style: italic; letter-spacing: -1px; }
+        
+        /* Badges de Posición */
+        .rank-box { width: 50px; height: 100%; position: absolute; left: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-style: italic; font-size: 1.4rem; border-radius: 8px 0 0 8px; }
+        .rank-1 { background: #fbbf24; color: #451a03; }
+        .rank-2 { background: #94a3b8; color: #0f172a; }
+        .rank-3 { background: #b45309; color: #fef3c7; }
+        .rank-default { background: #334155; color: #cbd5e1; }
+
+        .region-badge { background: #7f1d1d; color: #f87171; border: 1px solid #991b1b; padding: 2px 10px; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body class="p-4 md:p-10">
@@ -28,51 +55,45 @@
         <div class="panel-bg rounded-2xl p-6 shadow-2xl">
             
             <div class="flex justify-between items-center mb-8">
-                <div class="bg-[#1a2030] border border-[#323a4f] px-5 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
-                    <span class="opacity-40">i</span> Information
+                <div class="bg-[#1a2030] border border-[#323a4f] px-4 py-2 rounded-lg text-xs font-bold text-white uppercase tracking-widest opacity-80">
+                    Ranking General
                 </div>
-                <div class="flex items-center gap-4 p-2 px-4 rounded-lg bg-[#1a2030] border border-[#323a4f] text-xs">
-                    <span class="text-slate-500 uppercase font-bold">Server IP</span>
-                    <span class="font-bold text-white tracking-wider text-[13px]">minemen.club, hypixel.net</span>
-                    <img src="https://cdn-icons-png.flaticon.com/512/5968/5968756.png" class="h-4 w-4 opacity-70" alt="Discord">
+                <div class="flex items-center gap-3 bg-[#1a2030] border border-[#323a4f] px-4 py-2 rounded-lg text-[11px] font-bold">
+                    <span class="text-slate-500 uppercase">Server IP</span>
+                    <span class="text-white">vayluxmc.net</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-12 gap-4 text-slate-500 text-[11px] uppercase font-black px-6 mb-4 tracking-widest">
+            <div class="grid grid-cols-12 gap-4 text-slate-500 text-[10px] uppercase font-black px-6 mb-4 tracking-[0.2em]">
                 <div class="col-span-1">#</div>
                 <div class="col-span-6">Player</div>
                 <div class="col-span-2 text-center">Region</div>
                 <div class="col-span-3 text-right">Tier</div>
             </div>
 
-            <div id="player-container" class="space-y-4">
-                </div>
+            <div id="player-container" class="space-y-4"></div>
         </div>
     </div>
 
     <script>
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTlfD0FvQ-kVK2leat4n9qOvfu3zJ8rlv-B8qm9434NOMGCV4pOyw7B-cchbzFCpKCVSOGFhCI0YST_/pub?output=csv';
 
-        // Lógica de puntos y colores por Tier
-        function getTierData(tier) {
-            const cleanTier = tier.trim().toUpperCase();
-            const data = {
-                'S+': { points: 100, color: '#ff0000' }, // Rojo intenso
-                'S':  { points: 80,  color: '#dc2626' }, // Rojo
-                'A+': { points: 60,  color: '#f97316' }, // Naranja
-                'A-': { points: 40,  color: '#eab308' }, // Amarillo
-                'B+': { points: 20,  color: '#22c55e' }, // Verde
-                'B':  { points: 1,   color: '#3b82f6' }  // Azul
-            };
-            return data[cleanTier] || { points: 0, color: '#94a3b8' };
+        function getTierColor(tier) {
+            const t = tier.toUpperCase();
+            if (t.includes('S+')) return '#ff0000';
+            if (t.includes('S')) return '#dc2626';
+            if (t.includes('A+')) return '#f97316';
+            if (t.includes('A-')) return '#eab308';
+            if (t.includes('B+')) return '#22c55e';
+            if (t.includes('B')) return '#3b82f6';
+            return '#64748b';
         }
 
-        // Lógica de color por posición
         function getRankClass(pos) {
             if (pos == 1) return 'rank-1';
             if (pos == 2) return 'rank-2';
             if (pos == 3) return 'rank-3';
-            return 'rank-other';
+            return 'rank-default';
         }
 
         function loadPlayers() {
@@ -87,31 +108,33 @@
                     players.forEach(p => {
                         if(!p.Jugador) return;
 
-                        const tierData = getTierData(p.Tier);
                         const rankClass = getRankClass(p.Posicion);
+                        const tierColor = getTierColor(p.Tier);
+                        // Usamos el UUID para obtener el render de cuerpo completo (bust/body)
+                        const skinUrl = `https://visage.surgeplay.com/bust/160/${p.UUID || 'steve'}`;
 
                         const row = `
-                            <div class="player-row grid grid-cols-12 gap-4 items-center p-3 relative overflow-hidden">
-                                <div class="col-span-2 flex items-center relative h-16">
-                                    <div class="absolute inset-y-0 left-0 w-12 ${rankClass} rounded-l-lg flex items-center justify-center">
-                                        <span class="text-2xl font-black italic">${p.Posicion}</span>
-                                    </div>
-                                    <img src="https://mc-heads.net/avatar/${p.Jugador}/64" class="h-16 w-16 relative z-10 rounded shadow-2xl ml-14">
+                            <div class="player-row grid grid-cols-12 gap-4 items-center p-3 relative h-20 overflow-visible">
+                                <div class="col-span-1">
+                                    <div class="rank-box ${rankClass}">${p.Posicion}</div>
                                 </div>
 
-                                <div class="col-span-5 flex flex-col pl-10">
-                                    <span class="text-xl font-bold text-white tracking-wide">${p.Jugador}</span>
-                                    <div class="flex items-center gap-1 text-[11px] text-slate-500 font-bold mt-1">
-                                        <span class="text-amber-500">◆</span> Combat Master <span class="opacity-50">(${tierData.points} points)</span>
+                                <div class="col-span-6 flex items-center pl-10 relative">
+                                    <img src="${skinUrl}" class="mc-avatar h-24 w-24 -mt-4 z-10" alt="${p.Jugador}">
+                                    <div class="flex flex-col ml-4">
+                                        <span class="text-xl font-black italic tracking-tighter">${p.Jugador}</span>
+                                        <div class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase">
+                                            <span class="text-amber-500">◆</span> Combat Master <span class="opacity-50">(${p.Puntos} points)</span>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div class="col-span-2 flex justify-center">
-                                    <span class="region-badge uppercase tracking-tighter">${p.Region}</span>
+                                    <span class="region-badge">${p.Region}</span>
                                 </div>
 
                                 <div class="col-span-3 text-right pr-6">
-                                    <span class="tier-text" style="color: ${tierData.color}">${p.Tier}</span>
+                                    <span class="tier-text" style="color: ${tierColor}">${p.Tier}</span>
                                 </div>
                             </div>
                         `;
