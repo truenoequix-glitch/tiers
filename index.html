@@ -3,30 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCTiers Replica - Overall Only</title>
+    <title>MCTiers Editable | Overall</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        /* Personalización de colores y sombras estilo MCTiers */
-        body { background-color: #0d111a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fdfdfd; }
-        
-        /* Estilo para el botón/pestaña único 'Overall' */
+        body { background-color: #0d111a; font-family: 'Segoe UI', sans-serif; color: #fdfdfd; }
         .tab-button-single { background-color: #2b354a; border: 1px solid #4b5a78; color: #fff; box-shadow: 0 4px 10px rgba(75, 90, 120, 0.3); }
         .underline-active { background-color: #fff; }
-
-        /* Colores para los Tiers */
-        .tier-ht { color: #feae37; } /* Color para High Tiers (HT) */
-        .tier-lt { color: #a1a8b9; } /* Color para Low Tiers (LT) */
-        
-        /* Fondo del panel principal */
+        .tier-ht { color: #feae37; text-shadow: 0 0 5px rgba(254, 174, 55, 0.5); }
+        .tier-lt { color: #a1a8b9; }
         .panel-bg { background-color: #121826; border: 1px solid #1f283d; }
+        .rank-badge { background-color: #fbbf24; color: #451a03; } /* Color amarillo de la imagen */
     </style>
 </head>
 <body class="p-6 md:p-12">
 
-    <div class="max-w-7xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         
-        <div class="flex mb-12">
-            <div class="tab-button-single px-5 py-3 rounded-xl flex items-center gap-3 cursor-default">
+        <div class="flex mb-10">
+            <div class="tab-button-single px-5 py-3 rounded-xl flex items-center gap-3">
                 <img src="https://mctiers.com/assets/images/icons/trophy.png" alt="trophy" class="w-5 h-5">
                 <div class="flex flex-col">
                     <span class="font-bold text-sm">Overall</span>
@@ -35,84 +30,82 @@
             </div>
         </div>
 
-        <div class="panel-bg rounded-2xl p-6 shadow-xl">
+        <div class="panel-bg rounded-2xl p-6 shadow-xl text-sm">
             <div class="flex justify-between items-center mb-6">
-                <div class="bg-[#1a2030] border border-[#323a4f] px-4 py-2 rounded-lg text-xs flex items-center gap-2 text-white">
-                    <span class="w-4 h-4 rounded-full bg-slate-500 text-center leading-none text-[10px]">i</span>
-                    Information
+                <div class="bg-[#1a2030] border border-[#323a4f] px-4 py-2 rounded-lg text-xs text-white">
+                    <span class="opacity-50 mr-2">i</span> Information
                 </div>
-                <div class="flex items-center gap-3 p-2 rounded-lg bg-[#1a2030] border border-[#323a4f] text-xs">
-                    <img src="https://mctiers.com/assets/images/icons/pvpclub.png" alt="PVPClub" class="h-4">
+                <div class="hidden md:flex items-center gap-3 p-2 rounded-lg bg-[#1a2030] border border-[#323a4f] text-[11px]">
                     <span class="text-slate-500 uppercase">Server IP</span>
-                    <span class="font-bold text-white">mcpvp.club</span>
-                    <span class="text-slate-600 opacity-50">||</span>
-                    <img src="https://mctiers.com/assets/images/icons/discord.png" alt="Discord" class="h-4">
+                    <span class="font-bold text-white">VAYLUXMC.NET</span>
+                    <img src="https://mctiers.com/assets/images/icons/discord.png" alt="Discord" class="h-3 opacity-70">
                 </div>
             </div>
 
-            <div class="grid grid-cols-12 gap-4 text-slate-500 text-xs uppercase font-bold px-4 mb-4">
-                <div class="col-span-1 text-center">#</div>
+            <div class="grid grid-cols-12 gap-4 text-slate-500 text-[10px] uppercase font-bold px-4 mb-4">
+                <div class="col-span-1">#</div>
                 <div class="col-span-6">Player</div>
                 <div class="col-span-2 text-right">Region</div>
-                <div class="col-span-3 text-right">Tiers</div>
+                <div class="col-span-3 text-right">Tier</div>
             </div>
 
-            <div class="grid grid-cols-12 gap-4 items-center bg-[#1a2030] rounded-xl p-3 border border-[#323a4f] hover:border-slate-600 transition">
-                <div class="col-span-1 flex items-center gap-2 relative h-16">
-                    <div class="absolute inset-y-0 left-0 w-12 bg-amber-400/90 rounded-l-lg flex items-center justify-center">
-                        <span class="text-3xl font-bold text-amber-950 italic">1.</span>
-                    </div>
-                    <img src="https://mctiers.com/assets/images/avatars/avatar_1.png" alt="Avatar" class="h-16 w-16 relative z-10 rounded shadow-md ml-3">
+            <div id="player-container" class="space-y-3">
                 </div>
-                <div class="col-span-6 flex flex-col gap-1 pl-6">
-                    <span class="text-xl font-bold text-white">ItzRealMe</span>
-                    <div class="flex items-center gap-2 text-xs text-slate-500">
-                        <img src="https://mctiers.com/assets/images/icons/combat_master.png" alt="CombatMaster" class="w-3 h-3">
-                        Combat Master
-                        <span class="opacity-70">(330 points)</span>
-                    </div>
-                </div>
-                <div class="col-span-2 text-right">
-                    <span class="px-3 py-1 bg-red-950 text-red-300 text-xs font-bold rounded-md border border-red-800">NA</span>
-                </div>
-                <div class="col-span-3 flex justify-end gap-x-2 gap-y-1 flex-wrap pl-6">
-                    <div class="flex flex-col items-center gap-0.5">
-                        <img src="https://mctiers.com/assets/images/icons/diamond_sword.png" alt="Sword" class="w-3.5 h-3.5 opacity-80">
-                        <span class="tier-ht text-[10px] font-bold">HT3</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-0.5">
-                        <img src="https://mctiers.com/assets/images/icons/ender_pearl.png" alt="SMP" class="w-3.5 h-3.5 opacity-80">
-                        <span class="tier-ht text-[10px] font-bold">HT1</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-0.5">
-                        <img src="https://mctiers.com/assets/images/icons/diamond_ore.png" alt="Vanilla" class="w-3.5 h-3.5 opacity-80">
-                        <span class="tier-ht text-[10px] font-bold">HT1</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-0.5">
-                        <img src="https://mctiers.com/assets/images/icons/wither_skull.png" alt="NethOP" class="w-3.5 h-3.5 opacity-80">
-                        <span class="tier-ht text-[10px] font-bold">HT1</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-0.5">
-                        <img src="https://mctiers.com/assets/images/icons/potion.png" alt="Pot" class="w-3.5 h-3.5 opacity-80">
-                        <span class="tier-ht text-[10px] font-bold">HT1</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-0.5">
-                        <img src="https://mctiers.com/assets/images/icons/axe.png" alt="Axe" class="w-3.5 h-3.5 opacity-80">
-                        <span class="tier-lt text-[10px] font-bold">LT2</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-0.5">
-                        <img src="https://mctiers.com/assets/images/icons/mace.png" alt="Mace" class="w-3.5 h-3.5 opacity-80">
-                        <span class="tier-lt text-[10px] font-bold">LT2</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-0.5">
-                        <img src="https://mctiers.com/assets/images/icons/heart.png" alt="UHC" class="w-3.5 h-3.5 opacity-80">
-                        <span class="tier-lt text-[10px] font-bold">LT2</span>
-                    </div>
-                </div>
-            </div>
-
-            </div>
+        </div>
     </div>
 
+    <script>
+        // REEMPLAZA ESTO CON TU LINK DE GOOGLE SHEETS (CSV)
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTlfD0FvQ-kVK2leat4n9qOvfu3zJ8rlv-B8qm9434NOMGCV4pOyw7B-cchbzFCpKCVSOGFhCI0YST_/pub?output=csv';
+
+        function loadPlayers() {
+            Papa.parse(SHEET_URL, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const players = results.data;
+                    const container = document.getElementById('player-container');
+                    container.innerHTML = '';
+
+                    players.forEach(p => {
+                        if(!p.Jugador) return;
+
+                        // Determinar si es HT o LT para el color
+                        const isHighTier = p.Tier.includes('HT');
+                        const tierClass = isHighTier ? 'tier-ht' : 'tier-lt';
+
+                        const row = `
+                            <div class="grid grid-cols-12 gap-4 items-center bg-[#1a2030] rounded-xl p-3 border border-[#323a4f] hover:border-slate-600 transition">
+                                <div class="col-span-1 flex items-center relative h-16">
+                                    <div class="absolute inset-y-0 left-0 w-10 rank-badge rounded-l-lg flex items-center justify-center">
+                                        <span class="text-2xl font-black italic">${p.Posicion}.</span>
+                                    </div>
+                                    <img src="https://mc-heads.net/avatar/${p.Jugador}/64" alt="Skin" class="h-16 w-16 relative z-10 rounded shadow-lg ml-6">
+                                </div>
+                                <div class="col-span-6 flex flex-col pl-8">
+                                    <span class="text-lg font-bold text-white">${p.Jugador}</span>
+                                    <div class="flex items-center gap-1 text-[11px] text-slate-500">
+                                        <span class="text-amber-500">◆</span> Combat Master <span class="opacity-60">(${p.Puntos || '0'} points)</span>
+                                    </div>
+                                </div>
+                                <div class="col-span-2 text-right">
+                                    <span class="px-2 py-1 bg-red-950/30 text-red-400 text-[10px] font-bold rounded border border-red-900/50">${p.Region}</span>
+                                </div>
+                                <div class="col-span-3 flex justify-end items-center gap-2">
+                                    <div class="flex flex-col items-center">
+                                        <img src="https://mctiers.com/assets/images/icons/diamond_sword.png" class="w-4 h-4 opacity-80 mb-1">
+                                        <span class="${tierClass} text-xs font-black">${p.Tier}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        container.innerHTML += row;
+                    });
+                }
+            });
+        }
+
+        window.onload = loadPlayers;
+    </script>
 </body>
 </html>
