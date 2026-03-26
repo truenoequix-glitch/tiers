@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Tierlist | General</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        body { background-color: #0b0f1a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+        .tier-ht1 { color: #ff4d4d; font-weight: 800; text-shadow: 0 0 8px rgba(255, 77, 77, 0.5); }
+        .tier-lt1 { color: #ffaa00; font-weight: 700; }
+        .tier-t2 { color: #55ff55; font-weight: 600; }
+        .glass { background: rgba(23, 32, 53, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body class="p-6">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-black tracking-tighter italic">MC<span class="text-blue-500">TIERS</span></h1>
+            <div class="mt-2 inline-block bg-blue-500/10 text-blue-400 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-blue-500/20">
+                Ranking General
+            </div>
+        </header>
+
+        <div class="glass rounded-2xl overflow-hidden shadow-2xl">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-900/50 text-slate-500 text-xs uppercase tracking-wider">
+                    <tr>
+                        <th class="px-6 py-4">#</th>
+                        <th class="px-6 py-4">Jugador</th>
+                        <th class="px-6 py-4 text-center">Tier</th>
+                        <th class="px-6 py-4 text-right">Región</th>
+                    </tr>
+                </thead>
+                <tbody id="player-table" class="divide-y divide-slate-800">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // PEGA AQUÍ TU ENLACE DE GOOGLE SHEETS (EL QUE TERMINA EN CSV)
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTlfD0FvQ-kVK2leat4n9qOvfu3zJ8rlv-B8qm9434NOMGCV4pOyw7B-cchbzFCpKCVSOGFhCI0YST_/pub?output=csv';
+
+        function loadPlayers() {
+            Papa.parse(SHEET_URL, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const players = results.data;
+                    const tableBody = document.getElementById('player-table');
+                    tableBody.innerHTML = '';
+
+                    players.forEach(p => {
+                        if(!p.Jugador) return; // Salta filas vacías
+
+                        const row = `
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="px-6 py-5 text-slate-600 font-mono">${p.Posicion}</td>
+                                <td class="px-6 py-5 flex items-center gap-4">
+                                    <img src="https://mc-heads.net/avatar/${p.Jugador}/32" class="w-8 h-8 rounded shadow-lg" onerror="this.src='https://mc-heads.net/avatar/Steve/32'">
+                                    <span class="font-bold text-slate-200">${p.Jugador}</span>
+                                </td>
+                                <td class="px-6 py-5 text-center">
+                                    <span class="tier-${p.Tier.toLowerCase()} bg-black/40 px-3 py-1 rounded border border-white/5">
+                                        ${p.Tier}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-5 text-right font-semibold text-slate-400">${p.Region}</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                }
+            });
+        }
+
+        window.onload = loadPlayers;
+    </script>
+</body>
+</html>
