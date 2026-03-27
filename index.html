@@ -2,106 +2,107 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VayluxMC | Tiers System</title>
+    <title>VayluxMC | Tiers Leaderboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { background-color: #0d111a; color: #fdfdfd; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #0d111a; color: white; font-family: 'Segoe UI', sans-serif; }
+        .discord-banner {
+            background: #161d2b; border: 1px solid #1f283d;
+            border-radius: 12px; display: flex; align-items: center;
+            justify-content: space-between; padding: 15px 25px; margin-bottom: 30px;
+        }
+        .player-card {
+            background: #111723; border: 1px solid #1f283d;
+            border-radius: 15px; padding: 15px 25px; margin-bottom: 15px;
+            display: flex; align-items: center; transition: 0.3s;
+        }
+        .player-card:hover { border-color: #3b82f6; transform: scale(1.01); }
         
-        /* Contenedor de la tarjeta */
-        .player-card { 
-            background-color: #161d2b; border: 1px solid #1f283d; 
-            border-radius: 12px; margin-bottom: 25px; height: 95px;
-            display: grid; grid-template-columns: repeat(12, 1fr);
-            align-items: center; position: relative; transition: 0.3s;
+        /* Círculos de modalidad estilo MCTier */
+        .mode-container { display: flex; gap: 15px; }
+        .mode-circle {
+            width: 55px; height: 55px; background: #1a2235;
+            border: 2px solid #2d364d; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
         }
-
-        .player-card:hover { transform: translateY(-3px); border-color: #3b4b6b; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-
-        /* Pestaña de posición corregida (No amontonada) */
-        .rank-badge { 
-            width: 55px; height: 65px; position: absolute; left: 0; 
-            display: flex; align-items: center; justify-content: center; 
-            font-weight: 900; font-style: italic; font-size: 1.6rem; 
-            border-radius: 0 12px 12px 0; box-shadow: 4px 0 15px rgba(0,0,0,0.4);
-            z-index: 10;
+        .mode-icon { width: 30px; height: 30px; }
+        .mode-tier {
+            position: absolute; bottom: -8px; left: 50%;
+            transform: translateX(-50%); font-size: 11px;
+            font-weight: 900; background: #000; padding: 1px 7px;
+            border-radius: 5px; border: 1px solid #333;
         }
-
-        /* Colores de podio degradados */
-        .rank-1 { background: linear-gradient(135deg, #fbbf24, #d97706); color: #451a03; }
-        .rank-2 { background: linear-gradient(135deg, #94a3b8, #475569); color: #0f172a; }
-        .rank-3 { background: linear-gradient(135deg, #b45309, #78350f); color: #fef3c7; }
-        .rank-default { background: #1e293b; color: #64748b; }
-
-        /* Efecto de brillo blanco al pasar el mouse por el número */
-        .player-card:hover .rank-badge::after {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transform: skewX(-20deg); animation: shine 0.6s forwards;
-        }
-        @keyframes shine { 100% { left: 200%; } }
-
-        .tier-text { 
-            font-weight: 900; font-size: 2.2rem; font-style: italic;
-            background-clip: text; -webkit-background-clip: text; color: transparent;
-        }
-
-        .region-tag { background: #7f1d1d; color: #f87171; border: 1px solid #991b1b; padding: 4px 12px; border-radius: 6px; font-weight: 800; }
     </style>
 </head>
 <body class="p-10">
-    <div class="max-w-6xl mx-auto" id="leaderboard">
+    <div class="max-w-6xl mx-auto">
+        <div class="discord-banner">
+            <div class="flex items-center gap-4">
+                <img src="https://minecraft.wiki/images/Thumb_Discord_Logo.png" width="35">
+                <span class="text-xl font-bold">discord.gg/clanzteam</span>
+            </div>
+            <a href="https://discord.gg/clanzteam" class="bg-indigo-600 hover:bg-indigo-700 px-6 py-2 rounded-lg font-bold transition">UNIRSE</a>
         </div>
 
-    <script>
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTlfD0FvQ-kVK2leat4n9qOvfu3zJ8rlv-B8qm9434NOMGCV4pOyw7B-cchbzFCpKCVSOGFhCI0YST_/pub?output=csv';
+        <div id="leaderboard"></div>
+    </div>
 
-        function getTierGradient(tier) {
-            const t = tier.toUpperCase();
-            if (t.includes('S+')) return 'linear-gradient(#ff4d4d, #990000)';
-            if (t.includes('S')) return 'linear-gradient(#ef4444, #7f1d1d)';
-            if (t.includes('A')) return 'linear-gradient(#fb923c, #9a3412)';
-            if (t.includes('B')) return 'linear-gradient(#4ade80, #14532d)';
-            return 'linear-gradient(#60a5fa, #1e3a8a)';
-        }
+    <script>
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTlfD0FvQ-kVK2leat4n9qOvfu3zJ8rlv-B8qm9434NOMGCV4pOyw7B-cchbzFCpKCVSOGFhCI0YST_/pub?output=csv
+
+';
+        const ICONS = {
+            bedfight: "https://minecraft.wiki/images/Shears_JE3_BE2.png",
+            bedwars: "https://minecraft.wiki/images/Red_Bed_BE.png",
+            topfight: "https://minecraft.wiki/images/Wooden_Sword_JE3_BE3.png",
+            blockfight: "https://minecraft.wiki/images/White_Wool_JE4_BE2.png"
+        };
 
         function loadData() {
             Papa.parse(CSV_URL, {
                 download: true, header: true,
                 complete: function(results) {
-                    // Filtrar filas vacías y ORDENAR POR PUNTOS
-                    let players = results.data.filter(p => p.Jugador);
-                    players.sort((a, b) => parseInt(b.Puntos || 0) - parseInt(a.Puntos || 0));
+                    let rows = results.data.filter(r => r.UUID);
+                    let playersMap = {};
+
+                    // Agrupar modalidades por jugador
+                    rows.forEach(r => {
+                        if (!playersMap[r.UUID]) {
+                            playersMap[r.UUID] = { name: r.Nombre, region: r.Region, totalPts: 0, modes: {} };
+                        }
+                        playersMap[r.UUID].modes[r.Modalidad.toLowerCase()] = r.Tier;
+                        playersMap[r.UUID].totalPts += parseInt(r.Puntos || 0);
+                    });
 
                     const container = document.getElementById('leaderboard');
                     container.innerHTML = '';
 
-                    players.forEach((p, index) => {
-                        const rank = index + 1;
-                        const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-default';
-                        const tierColor = getTierGradient(p.Tier);
+                    Object.values(playersMap).sort((a,b) => b.totalPts - a.totalPts).forEach((p, index) => {
+                        let modesHtml = '';
+                        ['bedfight', 'bedwars', 'topfight', 'blockfight'].forEach(m => {
+                            let tier = p.modes[m] || '-';
+                            let tierColor = tier !== '-' ? '#f87171' : '#4b5563';
+                            modesHtml += `
+                                <div class="mode-circle">
+                                    <img src="${ICONS[m]}" class="mode-icon">
+                                    <span class="mode-tier" style="color: ${tierColor}">${tier}</span>
+                                </div>
+                            `;
+                        });
 
                         container.innerHTML += `
                             <div class="player-card">
-                                <div class="rank-badge ${rankClass}">${rank}</div>
-                                
-                                <div class="col-span-7 flex items-center pl-20">
-                                    <img src="https://visage.surgeplay.com/bust/120/${p.UUID}" class="h-24 -mt-8 drop-shadow-2xl">
-                                    <div class="ml-12">
-                                        <h2 class="text-2xl font-black italic uppercase leading-none">${p.Jugador}</h2>
-                                        <p class="text-[11px] font-bold text-slate-500 mt-2 uppercase tracking-tighter">
-                                            <span class="text-amber-500">✦</span> Combat Master (${p.Puntos} points)
-                                        </p>
+                                <div class="text-2xl font-black italic w-12 text-slate-500">#${index+1}</div>
+                                <div class="flex-1 flex items-center">
+                                    <img src="https://visage.surgeplay.com/bust/100/${Object.keys(playersMap).find(k => playersMap[k] === p)}" class="h-20">
+                                    <div class="ml-8">
+                                        <div class="text-2xl font-black italic uppercase">${p.name}</div>
+                                        <div class="bg-red-900/30 text-red-400 px-2 py-0.5 rounded text-[10px] font-bold inline-block border border-red-800">${p.region}</div>
                                     </div>
                                 </div>
-
-                                <div class="col-span-2 flex justify-center">
-                                    <span class="region-tag uppercase text-xs">${p.Region}</span>
-                                </div>
-
-                                <div class="col-span-3 text-right pr-12">
-                                    <span class="tier-text" style="background-image: ${tierColor}">${p.Tier}</span>
-                                </div>
+                                <div class="mode-container">${modesHtml}</div>
                             </div>
                         `;
                     });
